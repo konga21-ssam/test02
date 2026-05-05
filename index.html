@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>귀여운 랜덤 조 편성기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 귀엽고 둥글둥글한 폰트 적용 */
+        @import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gamja+Flower&display=swap');
+        
+        :root {
+            --pastel-pink: #fff1f2;
+            --main-pink: #fda4af;
+            --dark-pink: #fb7185;
+        }
+
+        body { 
+            font-family: 'Gaegu', cursive; 
+            background-color: var(--pastel-pink); 
+            letter-spacing: 0.02em;
+        }
+
+        .soft-shadow {
+            box-shadow: 0 10px 25px -5px rgba(251, 113, 133, 0.1), 0 8px 10px -6px rgba(251, 113, 133, 0.1);
+        }
+
+        .group-card { 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 24px;
+        }
+        
+        .group-card:hover { 
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--main-pink);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #fff1f2;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #fecdd3;
+            border-radius: 10px;
+        }
+
+        /* 조장 별 반짝임 효과 */
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        .leader-star {
+            animation: twinkle 1.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-5xl font-bold text-rose-600 mb-4 drop-shadow-sm">🍓 우리 반 꽁냥꽁냥 조 편성</h1>
+            <p class="text-xl text-rose-400 font-medium">친구들과 함께 즐겁게 공부해요!</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Side: Student List Editor -->
+            <div class="lg:col-span-1 bg-white/80 backdrop-blur-sm p-8 rounded-[32px] soft-shadow border-4 border-white">
+                <h2 class="text-2xl font-bold text-rose-500 mb-4 flex items-center">
+                    <span class="mr-2 text-3xl">📝</span> 학생 명단
+                </h2>
+                <p class="text-lg text-rose-300 mb-4">학생 이름을 한 줄에 하나씩 써주세요!</p>
+                <textarea id="studentInput" class="custom-scrollbar w-full h-80 p-5 text-xl border-2 border-rose-100 rounded-2xl focus:ring-4 focus:ring-rose-200 focus:border-rose-300 focus:outline-none resize-none bg-rose-50/30 text-rose-700"></textarea>
+                
+                <button onclick="shuffleGroups()" class="w-full mt-8 bg-rose-400 hover:bg-rose-500 text-white text-2xl font-bold py-5 rounded-2xl shadow-lg shadow-rose-200 transition-all active:scale-95 border-b-8 border-rose-600">
+                    🪄 짠! 조 만들기
+                </button>
+            </div>
+
+            <!-- Right Side: Groups Display -->
+            <div class="lg:col-span-2">
+                <div id="groupsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Groups will be rendered here -->
+                    <div class="col-span-full py-24 text-center bg-white/50 border-4 border-dashed border-rose-200 rounded-[40px]">
+                        <p class="text-2xl text-rose-300">이름을 적고 버튼을 누르면<br>귀여운 조가 완성돼요!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI Notification/Message Box -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-rose-600 text-white px-8 py-4 rounded-full text-xl shadow-2xl opacity-0 transition-all pointer-events-none z-50"></div>
+
+    <script>
+        // 초기 24명 기본 명단
+        let students = Array.from({ length: 24 }, (_, i) => `귀요미 ${i + 1}`);
+
+        const textarea = document.getElementById('studentInput');
+        textarea.value = students.join('\n');
+
+        function showMessage(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translate(-50%, -20px)';
+            setTimeout(() => { 
+                toast.style.opacity = '0'; 
+                toast.style.transform = 'translate(-50%, 0)';
+            }, 2500);
+        }
+
+        function shuffleGroups() {
+            const input = textarea.value.trim();
+            if (!input) {
+                showMessage("친구들 이름을 먼저 적어주세요! 🎀");
+                return;
+            }
+
+            let currentList = input.split(/[\n,]+/).map(name => name.trim()).filter(name => name !== "");
+            
+            // 셔플 알고리즘
+            for (let i = currentList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [currentList[i], currentList[j]] = [currentList[j], currentList[i]];
+            }
+
+            const groupsContainer = document.getElementById('groupsContainer');
+            groupsContainer.innerHTML = ''; 
+
+            const groupSize = 4;
+            const groupCount = Math.ceil(currentList.length / groupSize);
+
+            for (let i = 0; i < groupCount; i++) {
+                const groupMembers = currentList.slice(i * groupSize, i * groupSize + groupSize);
+                const leaderIndex = Math.floor(Math.random() * groupMembers.length);
+                
+                const groupCard = document.createElement('div');
+                groupCard.className = 'group-card bg-white p-6 soft-shadow border-2 border-rose-50 relative overflow-hidden';
+                
+                // 조 번호 장식
+                const decor = document.createElement('div');
+                decor.className = 'absolute -top-4 -right-4 w-16 h-16 bg-rose-100 rounded-full opacity-50';
+                groupCard.appendChild(decor);
+
+                let membersHtml = groupMembers.map((name, idx) => `
+                    <div class="flex items-center justify-between p-3 mb-2 rounded-xl transition-colors ${idx === leaderIndex ? 'bg-rose-100 border-2 border-rose-200' : 'bg-rose-50/50'}">
+                        <span class="text-xl font-bold ${idx === leaderIndex ? 'text-rose-700' : 'text-rose-500'}">
+                            ${name}
+                        </span>
+                        ${idx === leaderIndex ? '<span class="leader-star text-lg bg-rose-500 text-white px-3 py-1 rounded-full shadow-sm">👑 조장</span>' : ''}
+                    </div>
+                `).join('');
+
+                groupCard.innerHTML += `
+                    <div class="relative z-10">
+                        <h3 class="text-2xl font-black text-rose-500 mb-4 flex items-center">
+                            <span class="bg-rose-500 text-white w-8 h-8 rounded-full inline-flex items-center justify-center text-lg mr-2">${i + 1}</span>
+                            모둠
+                        </h3>
+                        <div>${membersHtml}</div>
+                    </div>
+                `;
+                
+                groupsContainer.appendChild(groupCard);
+            }
+
+            showMessage("우와! 멋진 조가 만들어졌어요! 💕");
+        }
+    </script>
+</body>
+</html>
